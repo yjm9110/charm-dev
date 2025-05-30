@@ -1,9 +1,9 @@
 FROM ubuntu:22.04
 
-# 环境变量
+# set environment value to enable interaction during package installation; 设置环境变量来取消包安装过程的交互行为
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 安装系统依赖
+# install dependencies; 安装系统依赖
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3 \
@@ -19,9 +19,9 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 进入下载目录
+# set pbc, charm-crypto download directory; 进入下载目录
 WORKDIR /home/download 
-# 安装pbc
+# install pbc from source codes; 安装pbc
 RUN wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz && \
     tar -xzvf pbc-0.5.14.tar.gz && cd pbc-0.5.14 && \
     ./configure && make && make install
@@ -36,17 +36,20 @@ RUN wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz && \
 #     make install && \
 #     ldconfig
 
-# 安装 charm-crypto
-# RUN pip3 install charm-crypto
+# intall charm-crypto from source codes; 安装 charm-crypto
+# RUN pip3 install charm-crypto // failed due to version contradiction
 RUN git clone https://github.com/JHUISI/charm.git && \
     cd charm && \
     ./configure.sh && make install && \
     pip3 install .  
 
-# 测试 charm 安装
+# clear downloads; 删除下载的源文件
+RUN rm -rf /home/download/*
+
+# test if charm-crypto is installed successfully; 测试 charm 安装
 RUN python3 -c "from charm.toolbox.pairinggroup import PairingGroup; print('Charm installed successfully with pairing group:', PairingGroup('SS512'))"
 
-# 设置工作目录
+# set work directory; 设置工作目录
 WORKDIR /home
 
 CMD ["/bin/bash"]
